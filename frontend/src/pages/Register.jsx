@@ -57,37 +57,33 @@ const Register = () => {
         setLoading(true);
 
         try {
-            const result = await dispatch(register({ name, email, password }));
+            const result = await dispatch(register({ name, email, password })).unwrap();
 
-            // Check if user already exists
-            if (result?.error && result.error.message === "User with this email already exists") {
+            if (result.error) {
                 Toast.fire({
                     icon: "error",
-                    title: "User with this email already exists.",
+                    title: result.error,
                 });
-            } else if (result?.message === "success") {
+            } else {
                 Toast.fire({
                     icon: "success",
                     title: "Registered successfully.",
                 });
+
                 setName("");
                 setEmail("");
                 setPassword("");
-            } else {
-                Toast.fire({
-                    icon: "error",
-                    title: "Email already exists.",
-                });
             }
         } catch (error) {
             Toast.fire({
                 icon: "error",
-                title: error.message || "Registration failed. Try again!",
+                title: error || "Registration failed. Try again!",
             });
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="bg-white text-gray-900 py-12 flex items-center justify-center">

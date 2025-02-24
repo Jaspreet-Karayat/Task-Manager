@@ -14,26 +14,27 @@ router.post("/register", async (req, res) => {
             return res.status(400).json({ error: "All fields are required" });
         }
 
-        // Check if the user already exists
         const userExists = await User.findOne({ email });
         if (userExists) {
-            return res.status(400).json({ error: "User with this email already exists" });
+            return res.status(400).json({ error: "Email already exists." });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the new user
         const user = await User.create({ name, email, password: hashedPassword });
 
-        // Create JWT token
         const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-        res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+        res.status(201).json({
+            message: "success",
+            token,
+            user: { id: user._id, name: user.name, email: user.email }
+        });
     } catch (error) {
         res.status(500).json({ error: "Server error while registering user" });
     }
 });
+
 
 // Login User
 router.post("/login", async (req, res) => {

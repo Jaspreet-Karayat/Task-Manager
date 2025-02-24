@@ -8,10 +8,9 @@ export const register = createAsyncThunk("auth/register", async (userData, { rej
     try {
         const response = await axios.post(`${API_URL}/api/auth/register`, userData);
         localStorage.setItem("user", JSON.stringify(response.data));
-        // localStorage.setItem("token", response.data.token);
         return response.data;
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || "Registration failed");
+        return rejectWithValue(error.response?.data?.error || "Registration failed");
     }
 });
 
@@ -20,44 +19,62 @@ export const login = createAsyncThunk("auth/login", async (userData, { rejectWit
     try {
         const response = await axios.post(`${API_URL}/api/auth/login`, userData);
         localStorage.setItem("user", JSON.stringify(response.data));
-        // localStorage.setItem("token", response.data.token);
         return response.data;
     } catch (error) {
-        return rejectWithValue(error.response?.data?.message || "Login failed");
+        return rejectWithValue(error.response?.data?.error || "Login failed");
     }
 });
 
 // Logout User (Thunk Action)
 export const logout = () => (dispatch) => {
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     dispatch(authSlice.actions.logoutUser());
 };
 
 // Auth Slice
 const authSlice = createSlice({
     name: "auth",
-    initialState: { user: JSON.parse(localStorage.getItem("user")) || null, error: null },
+    initialState: {
+        user: JSON.parse(localStorage.getItem("user")) || null,
+        loading: false,
+        error: null,
+    },
     reducers: {
         logoutUser: (state) => {
             state.user = null;
             state.error = null;
+            state.loading = false;
         },
     },
     extraReducers: (builder) => {
         builder
+            // Register Cases
+            .addCase(register.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(register.fulfilled, (state, action) => {
+                state.loading = false;
                 state.user = action.payload;
                 state.error = null;
             })
             .addCase(register.rejected, (state, action) => {
+                state.loading = false;
                 state.error = action.payload;
             })
+
+            // Login Cases
+            .addCase(login.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
             .addCase(login.fulfilled, (state, action) => {
+                state.loading = false;
                 state.user = action.payload;
                 state.error = null;
             })
             .addCase(login.rejected, (state, action) => {
+                state.loading = false;
                 state.error = action.payload;
             });
     },
